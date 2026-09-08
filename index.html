@@ -105,6 +105,10 @@
   .pillar p { font-size: 14.5px; color: var(--on-ink-soft); margin: 0; }
   @media (max-width: 820px){ .pillars { grid-template-columns: 1fr; } }
 
+  /* Intro video */
+  .video-wrap { position: relative; width: 100%; max-width: 760px; margin: 0 auto; aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; box-shadow: 0 16px 40px rgba(20,32,46,.16); border: 1px solid var(--line); background: #000; }
+  .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
   /* Work examples */
   .ex-band { background: #ECEFF3; }
   .ex-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
@@ -234,6 +238,20 @@
     </div>
   </div>
 </header>
+
+<!-- INTRO VIDEO -->
+<section class="band" id="intro">
+  <div class="wrap">
+    <div class="section-head reveal" style="text-align:center; max-width:640px; margin:0 auto 34px;">
+      <p class="eyebrow">Meet Todd</p>
+      <h2>The 45-second version — from me.</h2>
+      <p>Rather hear it straight from a human? Here's the short pitch, in my own voice.</p>
+    </div>
+    <div class="video-wrap reveal">
+      <iframe src="https://www.youtube-nocookie.com/embed/Cf8nP-sUoZQ?rel=0" title="Todd Mixon — 45-second intro" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+  </div>
+</section>
 
 <!-- WORK EXAMPLES -->
 <section class="band ex-band" id="examples">
@@ -797,12 +815,12 @@ HST=${AC2}; HITAC
 <script>
 /* ============================================================
    CONFIG — the only thing you change to deploy on todddelivers.ai
-   • Preview (here): PREVIEW_MODE = true. The environment provides
+   • Preview (here): PREVIEW_MODE = false. The environment provides
      model access, so the AI ChatBox works live.
    • Deploy: set PREVIEW_MODE = false and point PROXY_ENDPOINT at a
      serverless function that holds your Anthropic key server-side.
    ============================================================ */
-const CONFIG = { PREVIEW_MODE: false, PROXY_ENDPOINT: "/api/chat", MODEL: "claude-sonnet-4-6", MAX_TOKENS: 1000 };
+const CONFIG = { PREVIEW_MODE: true, PROXY_ENDPOINT: "/api/chat", MODEL: "claude-sonnet-4-6", MAX_TOKENS: 1000 };
 
 const SYSTEM_PROMPT = `You ARE Stephen "Todd" Mixon, answering questions through an AI version of yourself on your own website (todddelivers.ai). Speak in the FIRST PERSON as Todd — "I built…", "I led…", "my toolkit is…". Be warm, direct, and confident without bragging. Answer ONLY from the verified facts below. If something isn't covered, say you don't have that detail handy and invite them to email you at todd.mixon@gmail.com — never invent facts, employers, dates, or numbers. Keep replies short — 2–3 sentences, roughly 60 words or fewer, plain-English. If there's more worth saying, end by offering to go deeper rather than dumping it all at once. Frame yourself as a business operator who ships real, working AI — not a software developer. Never discuss compensation or salary. Never mention any employer not listed below. If someone asks whether you're really Todd, be honest: you're an AI version of him, grounded in his real background.
 
