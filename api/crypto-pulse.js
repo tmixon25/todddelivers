@@ -146,10 +146,20 @@ export default async function handler(req, res) {
       marketCap: Number(r.MARKET_CAP_USD)
     }));
 
+    // 4b) Rolling history — the last 15 minutes of captured changes
+    const recentRows = await sfExec(`
+      SELECT TO_VARCHAR(captured_at, 'HH24:MI:SS') AS t, symbol, new_price, change_24h_pct
+      FROM crypto_change_log
+      WHERE captured_at > DATEADD(minute, -15, CURRENT_TIMESTAMP())
+      ORDER BY captured_at DESC, market_cap_usd DESC;`, jwt);
+    const recent = recentRows.map(r => ({
+      t: r.T, symbol: r.SYMBOL, price: Number(r.NEW_PRICE), change24h: Number(r.CHANGE_24H_PCT)
+    }));
+
     // 5) Narrate
     const narrative = changes.length ? await narrate(changes) : "No changes captured in this pull.";
 
-    res.status(200).json({ ok: true, ranAt: new Date().toISOString(), changes, narrative });
+    res.status(200).json({ ok: true, ranAt: new Date().toISOString(), changes, recent, narrative });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }
