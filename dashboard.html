@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Data Intelligence — Snowflake + Claude | Todd Mixon</title>
+<meta name="description" content="A live demo: real-time crypto changes captured with Snowflake Streams (CDC) and narrated in plain English by Claude." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink:#14202E; --ink-2:#35414F; --ink-soft:#5B6675;
+    --paper:#F2F4F6; --card:#FFFFFF; --line:#E1E5EA; --line-dark:#2A3746;
+    --brass:#9C6B2F; --brass-soft:#C89A5E; --on-ink:#E8ECF1; --on-ink-soft:#A9B4C0;
+    --green:#1E9E6A; --red:#D24A43;
+    --radius:14px; --shadow:0 1px 2px rgba(20,32,46,.04),0 12px 32px rgba(20,32,46,.08);
+    --display:"Space Grotesk",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--body); background:var(--paper); color:var(--ink); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; }
+  .wrap { max-width:1120px; margin:0 auto; padding:0 28px; }
+
+  nav { background:var(--ink); color:var(--on-ink); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; height:60px; }
+  .brand { font-family:var(--display); font-weight:700; font-size:17px; }
+  .brand .dot { color:var(--brass-soft); }
+  .nav-inner a { text-decoration:none; font-size:13.5px; color:var(--on-ink-soft); font-family:var(--mono); }
+  .nav-inner a:hover { color:#fff; }
+
+  header.hero { background:var(--ink); color:var(--on-ink); padding:40px 0 30px; }
+  .eyebrow { font-family:var(--mono); font-size:11.5px; letter-spacing:1.6px; text-transform:uppercase; color:var(--brass-soft); margin:0 0 12px; }
+  header.hero h1 { font-family:var(--display); font-weight:600; font-size:clamp(26px,3.6vw,36px); letter-spacing:-0.6px; margin:0 0 12px; color:#fff; }
+  header.hero p { font-size:16px; color:var(--on-ink-soft); max-width:640px; margin:0; }
+
+  .pipeline { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:22px; font-family:var(--mono); font-size:11.5px; letter-spacing:.4px; color:var(--on-ink-soft); }
+  .pipe-step { background:rgba(255,255,255,.05); border:1px solid var(--line-dark); border-radius:20px; padding:6px 13px; color:#fff; }
+  .pipe-arrow { color:var(--brass-soft); }
+
+  .controls { display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding:22px 0; border-bottom:1px solid var(--line); }
+  .btn { font-family:var(--body); font-weight:600; font-size:14px; color:#fff; background:var(--brass); border:none; border-radius:10px; padding:11px 20px; cursor:pointer; transition:background .15s ease; }
+  .btn:hover { background:#855822; }
+  .btn:disabled { background:#C8CDD4; cursor:not-allowed; }
+  .toggle { display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink-2); cursor:pointer; user-select:none; }
+  .status { font-family:var(--mono); font-size:12px; color:var(--ink-soft); margin-left:auto; }
+  .dot-live { width:8px; height:8px; border-radius:50%; background:var(--green); display:inline-block; margin-right:6px; box-shadow:0 0 0 3px rgba(30,158,106,.16); }
+
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; padding:26px 0 60px; }
+  @media (max-width:860px){ .grid { grid-template-columns:1fr; } }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .panel-head { padding:16px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+  .panel-head h2 { font-family:var(--display); font-weight:600; font-size:15.5px; margin:0; letter-spacing:-0.2px; }
+  .panel-head .tag { font-family:var(--mono); font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--brass); }
+  .panel-body { padding:18px 20px; }
+
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--ink-soft); padding:0 0 10px; font-weight:500; }
+  td { padding:11px 0; border-top:1px solid var(--line); font-size:14.5px; }
+  td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .sym { font-family:var(--display); font-weight:600; }
+  .sym small { display:block; font-family:var(--body); font-weight:400; font-size:11.5px; color:var(--ink-soft); letter-spacing:0; }
+  .up { color:var(--green); } .down { color:var(--red); }
+
+  .feed { max-height:230px; overflow-y:auto; margin-top:18px; }
+  .feed-row { display:flex; align-items:center; gap:12px; font-family:var(--mono); font-size:12.5px; padding:7px 0; border-top:1px dashed var(--line); color:var(--ink-2); }
+  .feed-row:first-child { border-top:none; }
+  .feed-row .ftime { color:var(--ink-soft); }
+  .feed-row .fsym { font-weight:600; color:var(--ink); width:44px; }
+
+  .narrative { font-size:15px; line-height:1.7; color:var(--ink); }
+  .narrative strong { font-weight:600; }
+  .narrative p { margin:0 0 12px; }
+  .narrative .stamp { font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); margin-bottom:14px; }
+  .loading { color:var(--ink-soft); font-size:14px; }
+  .err { color:var(--red); font-size:14px; }
+
+  footer { border-top:1px solid var(--line); padding:22px 0 40px; font-size:12.5px; color:var(--ink-soft); }
+  footer b { color:var(--ink-2); font-weight:600; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <div class="brand">Todd Mixon<span class="dot"> ·</span> Live Data Intelligence</div>
+    <a href="/">&larr; Back to site</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Snowflake + Claude · real-time CDC</p>
+    <h1>What changed in the market — in plain English.</h1>
+    <p>Live crypto prices flow into Snowflake, change data capture (Snowflake Streams) records exactly what moved, and Claude turns those changes into a business narrative. Crypto trades 24/7, so this is live around the clock.</p>
+    <div class="pipeline">
+      <span class="pipe-step">Live feed (CoinGecko)</span>
+      <span class="pipe-arrow">&rarr;</span>
+      <span class="pipe-step">Snowflake Stream (CDC)</span>
+      <span class="pipe-arrow">&rarr;</span>
+      <span class="pipe-step">Claude narration</span>
+      <span class="pipe-arrow">&rarr;</span>
+      <span class="pipe-step">This dashboard</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <button class="btn" id="pullBtn" type="button">▶ Pull latest</button>
+    <label class="toggle"><input type="checkbox" id="autoToggle" /> Auto-refresh (30s)</label>
+    <span class="status" id="status"><span class="dot-live"></span>Ready</span>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-head"><h2>What changed</h2><span class="tag">latest pull</span></div>
+      <div class="panel-body">
+        <table>
+          <thead><tr><th>Asset</th><th class="num">Price (USD)</th><th class="num">24h</th></tr></thead>
+          <tbody id="changeBody"><tr><td colspan="3" class="loading">Pulling live data…</td></tr></tbody>
+        </table>
+        <div class="feed" id="feed"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Claude's read</h2><span class="tag">AI narrative</span></div>
+      <div class="panel-body">
+        <div class="narrative" id="narrative"><span class="loading">Waiting for the first pull…</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built on <b>Snowflake Streams</b> (change data capture) and the <b>Claude API</b>. Source data: CoinGecko public API.
+    Queries run on-demand with a 60-second auto-suspend warehouse — cost-controlled by design.
+  </footer>
+</div>
+
+<script>
+const pullBtn = document.getElementById('pullBtn');
+const autoToggle = document.getElementById('autoToggle');
+const statusEl = document.getElementById('status');
+const changeBody = document.getElementById('changeBody');
+const feedEl = document.getElementById('feed');
+const narrativeEl = document.getElementById('narrative');
+let timer = null, busy = false;
+
+const fmtPrice = n => n >= 100 ? n.toLocaleString('en-US', {maximumFractionDigits:0})
+                    : n.toLocaleString('en-US', {maximumFractionDigits:4});
+const fmtPct = n => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+
+function renderChanges(changes) {
+  if (!changes || !changes.length) { changeBody.innerHTML = '<tr><td colspan="3" class="loading">No changes this pull.</td></tr>'; return; }
+  changeBody.innerHTML = changes.map(c => {
+    const cls = c.change24h >= 0 ? 'up' : 'down';
+    return '<tr><td class="sym">' + c.symbol + '<small>' + c.name + '</small></td>' +
+           '<td class="num">$' + fmtPrice(c.price) + '</td>' +
+           '<td class="num ' + cls + '">' + fmtPct(c.change24h) + '</td></tr>';
+  }).join('');
+}
+
+function renderFeed(recent) {
+  if (!recent || !recent.length) { feedEl.innerHTML = ''; return; }
+  feedEl.innerHTML = recent.slice(0, 40).map(r => {
+    const cls = r.change24h >= 0 ? 'up' : 'down';
+    return '<div class="feed-row"><span class="ftime">' + r.t + '</span>' +
+           '<span class="fsym">' + r.symbol + '</span>' +
+           '<span>$' + fmtPrice(r.price) + '</span>' +
+           '<span class="' + cls + '">' + fmtPct(r.change24h) + '</span></div>';
+  }).join('');
+}
+
+function renderNarrative(text, ranAt) {
+  const stamp = ranAt ? new Date(ranAt).toLocaleTimeString() : '';
+  // light markdown: **bold** and paragraph breaks
+  const html = text.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .split(/\n\n+/).map(p => '<p>' + p.replace(/\n/g,'<br>') + '</p>').join('');
+  narrativeEl.innerHTML = '<div class="stamp">Generated ' + stamp + '</div>' + html;
+}
+
+async function pull() {
+  if (busy) return;
+  busy = true; pullBtn.disabled = true;
+  statusEl.innerHTML = '<span class="dot-live"></span>Pulling…';
+  try {
+    const res = await fetch('/api/crypto-pulse');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Unknown error');
+    renderChanges(data.changes);
+    renderFeed(data.recent);
+    renderNarrative(data.narrative, data.ranAt);
+    statusEl.innerHTML = '<span class="dot-live"></span>Updated ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    narrativeEl.innerHTML = '<span class="err">Could not reach the live pipeline: ' + e.message + '</span>';
+    statusEl.innerHTML = 'Error';
+  } finally {
+    busy = false; pullBtn.disabled = false;
+  }
+}
+
+pullBtn.addEventListener('click', pull);
+autoToggle.addEventListener('change', () => {
+  if (autoToggle.checked) { timer = setInterval(pull, 30000); pull(); }
+  else { clearInterval(timer); timer = null; }
+});
+
+// auto-pull once on load so the dashboard is never empty
+pull();
+</script>
+</body>
+</html>
