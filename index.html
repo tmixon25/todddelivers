@@ -225,7 +225,7 @@
   <div class="wrap nav-inner">
     <div class="brand">Todd Mixon<span class="dot"> ·</span></div>
     <div class="nav-links">
-      <a href="#livedemo" class="nav-live">Real-Time AI Dashboard</a>
+      <a href="#livedemo" class="nav-live">Live AI Demos</a>
       <a href="#examples">Code</a>
       <a href="#work">Work</a>
       <a href="#approach">Approach</a>
@@ -266,15 +266,30 @@
 <!-- LIVE DATA DEMO -->
 <section class="band live-band" id="livedemo">
   <div class="wrap">
+    <div class="section-head reveal" style="margin-bottom:26px;">
+      <p class="eyebrow">Live AI demos</p>
+      <h2>Two things I built, deployed, and left running.</h2>
+    </div>
     <div class="live-card reveal">
       <div>
-        <span class="live-badge">New · Live build</span>
-        <h2>Live data intelligence — Snowflake + Claude</h2>
+        <span class="live-badge">Live build</span>
+        <h2>Real-time data intelligence — Snowflake + Claude</h2>
         <p>Real-time market changes captured with Snowflake Streams (change data capture) and narrated in plain English by Claude — built, deployed, and running live. Crypto trades 24/7, so it's always moving.</p>
         <div class="live-meta">Snowflake Streams (CDC) · Claude API · Vercel · live CoinGecko feed</div>
       </div>
       <div>
         <a class="live-btn" href="/dashboard.html" target="_blank" rel="noopener">Open the live dashboard →</a>
+      </div>
+    </div>
+    <div class="live-card reveal" style="margin-top:18px;">
+      <div>
+        <span class="live-badge">Live build</span>
+        <h2>AI model face-off — Claude vs. open-source Llama</h2>
+        <p>One prompt runs against a managed model (Claude) and an open-source model (Llama 3.1, via Hugging Face) side by side — with the cost, speed, and the call on which one to actually use. The build-vs-buy decision behind every AI project, live.</p>
+        <div class="live-meta">Claude API · Hugging Face (Llama 3.1) · Vercel</div>
+      </div>
+      <div>
+        <a class="live-btn" href="/faceoff.html" target="_blank" rel="noopener">Open the face-off →</a>
       </div>
     </div>
   </div>
@@ -847,7 +862,7 @@ HST=${AC2}; HITAC
    • Deploy: set PREVIEW_MODE = false and point PROXY_ENDPOINT at a
      serverless function that holds your Anthropic key server-side.
    ============================================================ */
-const CONFIG = { PREVIEW_MODE: false, PROXY_ENDPOINT: "/api/chat", MODEL: "claude-sonnet-4-6", MAX_TOKENS: 1000 };
+const CONFIG = { PREVIEW_MODE: true, PROXY_ENDPOINT: "/api/chat", MODEL: "claude-sonnet-4-6", MAX_TOKENS: 1000 };
 
 const SYSTEM_PROMPT = `You ARE Stephen "Todd" Mixon, answering questions through an AI version of yourself on your own website (todddelivers.ai). Speak in the FIRST PERSON as Todd — "I built…", "I led…", "my toolkit is…". Be warm, direct, and confident without bragging. Answer ONLY from the verified facts below. If something isn't covered, say you don't have that detail handy and invite them to email you at todd.mixon@gmail.com — never invent facts, employers, dates, or numbers. Keep replies short — 2–3 sentences, roughly 60 words or fewer, plain-English. If there's more worth saying, end by offering to go deeper rather than dumping it all at once. Frame yourself as a business operator who ships real, working AI — not a software developer. Never discuss compensation or salary. Never mention any employer not listed below. If someone asks whether you're really Todd, be honest: you're an AI version of him, grounded in his real background.
 
